@@ -3,27 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Início - Cinema</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Início - Sistema de Cinema</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    .badge-assento {
+      margin: 2px;
+      padding: 5px 10px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
-<body style="background-color: #f0f4f8; color: #333;">
-
+<body class="bg-light">
   <div id="navbar-container"></div>
 
-  <main class="container text-center" style="margin-top: 120px;">
-    <h1 class="mb-4">Bem-vindo ao Sistema de Cinema</h1>
-    <p class="lead">Use a barra de navegação para acessar as funcionalidades.</p>
-  </main>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Bem-vindo ao Sistema de Cinema</h2>
+    <p class="text-center">Use a barra de navegação para acessar as funcionalidades.</p>
+
+    <div class="card mx-auto mt-5 shadow" style="max-width: 500px;">
+      <div class="card-header bg-primary text-white">
+        Venda Rápida de Ingressos
+      </div>
+      <div class="card-body">
+        <form id="formVendaInicio">
+          <div class="mb-3">
+            <label for="sessao" class="form-label">Sessão</label>
+            <select class="form-select" id="sessao" required></select>
+          </div>
+
+          <div class="mb-3">
+            <label for="cliente" class="form-label">Nome do Cliente</label>
+            <input type="text" class="form-control" id="cliente" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="cpf" class="form-label">CPF</label>
+            <input type="text" class="form-control" id="cpf" required maxlength="14" />
+          </div>
+
+          <div class="mb-3">
+            <label for="assento" class="form-label">Assento</label>
+            <select class="form-select" id="assento" required></select>
+            <div id="assentosOcupados" class="mt-2 small text-muted"></div>
+          </div>
+
+          <div class="mb-3">
+            <label for="pagamento" class="form-label">Tipo de Pagamento</label>
+            <select class="form-select" id="pagamento" required>
+              <option>Cartão</option>
+              <option>Pix</option>
+              <option>Dinheiro</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">Confirmar Venda</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mx-auto mt-4 shadow" style="max-width: 700px;">
+      <div class="card-header bg-secondary text-white">
+        Ingressos Vendidos
+      </div>
+      <div class="card-body">
+        <ul class="list-group" id="listaIngressos"></ul>
+      </div>
+    </div>
+  </div>
 
   <script>
     fetch("navbar.html")
       .then(response => response.text())
-      .then(data => {
-        document.getElementById("navbar-container").innerHTML = data;
-      });
-  </script>
+      .then(data => document.getElementById("navbar-container").innerHTML = data);
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    const filmes = JSON.parse(localStorage.getItem("filmes")) || [];
+    const sessoes = JSON.parse(localStorage.getItem("sessoes")) || [];
+    const salas = JSON.parse(localStorage.getItem("salas")) || [];
+    let ingressos = JSON.parse(localStorage.getItem("ingressos")) || [];
+
+    const sessaoSelect = document.getElementById("sessao");
+    const assentoSelect = document.getElementById("assento");
+    const assentosOcupadosDiv = document.getElementById("assentosOcupados");
+    const listaIngressos = document.getElementById("listaIngressos");
+
+    const cpfInput = document.getElementById("cpf");
+    cpfInput.addEventListener("input", () => {
+      let v = cpfInput.value.replace(/\D/g, '');
+      if (v.length > 3) v = v.replace(/^(\d{3})(\d)/, '$1.$2');
+      if (v.length > 6) v = v.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+      if (v.length > 9) v = v.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+      cpfInput.value = v;
+    });
+
+    sessoes.forEach((sessao, index) => {
+      const filme = filmes.find(f => f.id === sessao.filme);
+      const nomeFilme = filme ? filme.nome : "Filme não encontrado";
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = `${nomeFilme} - ${sessao.dataHora}`;
+      sessaoSelect.appendChild(option);
+    });
+
+    function atualizarAssentosEIngressos() {
+      assentoSelect.innerHTML = "";
+      assentosOcupadosDiv.innerHTML = "";
+      listaIngressos.innerHTML = "";
+
+      const sessaoSelecionada = sessoes[sessaoSelect.value];
+      const sala = salas.find(s => s.id === sessaoSelecionada.sala);
+      const vendidos = ingressos
+        .filter(i => i.sessao.dataHora === sessaoSelecionada.dataHora)
+        .map(i => i.assento);
+
+      for (let i = 1; i <= sala.qtdAssentos; i++) {
+        const assento = `A${i}`;
+        if (!vendidos.includes(assento)) {
+          const opt = document.createElement("option");
+          opt.value = assento;
+          opt.textContent = assento;
+          assentoSelect.appendChild(opt);
+        } else {
+          const span = document.createElement("span");
+          span.className = "badge bg-danger badge-assento";
+          span.textContent = assento;
+          assentosOcupadosDiv.appendChild(span);
+        }
+      }
+
+      ingressos
+        .filter(i => i.sessao.dataHora === sessaoSelecionada.dataHora)
+        .forEach(i => {
+          const li = document.createElement("li");
+          li.className = "list-group-item";
+          li.textContent = `Cliente: ${i.cliente} | CPF: ${i.cpf} | Assento: ${i.assento} | Pagamento: ${i.pagamento}`;
+          listaIngressos.appendChild(li);
+        });
+    }
+
+    sessaoSelect.addEventListener("change", atualizarAssentosEIngressos);
+
+    if (sessaoSelect.options.length > 0) {
+      sessaoSelect.selectedIndex = 0;
+      atualizarAssentosEIngressos();
+    }
+
+    document.getElementById("formVendaInicio").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const sessao = sessoes[sessaoSelect.value];
+
+      const novaVenda = {
+        sessao: sessao,
+        cliente: document.getElementById("cliente").value,
+        cpf: document.getElementById("cpf").value,
+        assento: document.getElementById("assento").value,
+        pagamento: document.getElementById("pagamento").value
+      };
+
+      ingressos.push(novaVenda);
+      localStorage.setItem("ingressos", JSON.stringify(ingressos));
+
+      alert("Ingresso vendido com sucesso!");
+      this.reset();
+      atualizarAssentosEIngressos();
+    });
+  </script>
 </body>
 </html>
