@@ -1,4 +1,3 @@
-// ✅ Função para validar o filme
 function validarFilme(filme) {
     const mensagens = [];
   
