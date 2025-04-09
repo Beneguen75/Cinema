@@ -51,13 +51,15 @@ function carregarSalas() {
     card.className = "card shadow";
 
     const cadeirasHTML = gerarCadeirasSVG(sala.capacidade);
+    const idCadeiras = `cadeiras-${index}`;
 
     card.innerHTML = `
       <div class="card-body">
         <h5 class="card-title">${sala.nome}</h5>
         <p><strong>Capacidade:</strong> ${sala.capacidade}</p>
         <p><strong>Tipo:</strong> ${sala.tipo}</p>
-        <div class="cadeiras">${cadeirasHTML}</div>
+        <button class="btn btn-sm btn-secondary mb-2" onclick="toggleCadeiras('${idCadeiras}', this)">Mostrar Cadeiras</button>
+        <div class="cadeiras d-none" id="${idCadeiras}">${cadeirasHTML}</div>
         <div class="text-end mt-3">
           <button class="btn btn-sm btn-outline-primary me-2" onclick="abrirModal(${index})" data-bs-toggle="modal" data-bs-target="#modalSala">Editar</button>
           <button class="btn btn-sm btn-outline-danger" onclick="excluirSala(${index})">Excluir</button>
@@ -68,6 +70,12 @@ function carregarSalas() {
     col.appendChild(card);
     lista.appendChild(col);
   });
+}
+
+function toggleCadeiras(id, btn) {
+  const div = document.getElementById(id);
+  div.classList.toggle("d-none");
+  btn.textContent = div.classList.contains("d-none") ? "Mostrar Cadeiras" : "Ocultar Cadeiras";
 }
 
 function gerarCadeirasSVG(qtd) {
