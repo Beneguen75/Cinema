@@ -76,9 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="cadeira ${ocupados.includes(assento) ? 'ocupada' : ''}" title="${assento}">
               ${assento}
             </div>
-          `);
-          
-          
+          `);          
           
       }
   
