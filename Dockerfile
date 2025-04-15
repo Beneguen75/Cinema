@@ -12,15 +12,3 @@ EXPOSE 80
 
 # Inicia o Nginx
 CMD ["nginx", "-g", "daemon off;"]
-
-FROM nginx:latest
-# Remove o HTML padrão do Nginx
-RUN rm -rf /usr/share/nginx/html/*
-# Copia seus arquivos HTML e JS para a pasta padrão do Nginx
-COPY . .
-
-# Expõe a porta padrão do Nginx
-EXPOSE 80
-# Inicia o servidor Nginx
-
-CMD ["nginx", "-g", "daemon off;"]
